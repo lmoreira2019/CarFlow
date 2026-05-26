@@ -253,6 +253,26 @@ select.form-input {
     font-size: 1rem;
 }
 
+/* Mobile-specific fixes for select dropdown */
+@media (max-width: 768px) {
+    select.form-input {
+        appearance: menulist;
+        background-image: none;
+        padding-right: 2.5rem;
+        width: 100%;
+        min-height: 44px;
+    }
+
+    select.form-input:focus {
+        outline: 2px solid var(--accent-blue);
+        outline-offset: 2px;
+    }
+
+    .form-group select {
+        min-width: 100%;
+    }
+}
+
 .form-row {
     display: grid;
     grid-template-columns: 1fr;
