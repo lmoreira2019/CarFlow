@@ -837,11 +837,18 @@ function usePhoto() {
 function openCameraChoice() {
     console.log('📸 Abrindo modal de escolha de câmera...');
     const modal = document.getElementById('cameraCategoryModal');
-    if (modal) {
-        modal.classList.add('active');
-    } else {
-        console.error('❌ Modal de escolha de câmera não encontrado!');
+    console.log('🔍 Modal encontrado?', modal ? 'SIM' : 'NÃO');
+
+    if (!modal) {
+        console.error('❌ Modal de escolha de câmera não encontrado no DOM!');
+        console.error('Elementos disponíveis com ID contendo "camera":',
+            Array.from(document.querySelectorAll('[id*="camera"]')).map(el => el.id));
+        return;
     }
+
+    modal.classList.add('active');
+    console.log('✅ Classe "active" adicionada ao modal');
+    console.log('🎯 Display atual:', window.getComputedStyle(modal).display);
 }
 
 function closeCameraCategoryModal() {
@@ -849,6 +856,7 @@ function closeCameraCategoryModal() {
     const modal = document.getElementById('cameraCategoryModal');
     if (modal) {
         modal.classList.remove('active');
+        console.log('✅ Modal fechado');
     }
 }
 
@@ -860,6 +868,7 @@ function chooseCameraType(type) {
 
     closeCameraCategoryModal();
     setTimeout(() => {
+        console.log('⏱️ Abrindo câmera após delay...');
         openCameraModal(fieldType);
     }, 200);
 }
