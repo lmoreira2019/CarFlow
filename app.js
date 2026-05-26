@@ -837,8 +837,16 @@ function generateFuelPDF() {
         return;
     }
 
-    const { jsPDF } = window.jspdf;
-    const doc = new jsPDF({ orientation: 'landscape', unit: 'mm', format: 'a4' });
+    try {
+        // Try to access jsPDF from window
+        const jsPDFLib = window.jspdf ? window.jspdf.jsPDF : window.jsPDF;
+        if (!jsPDFLib) {
+            alert('Erro: Biblioteca jsPDF não carregada. Tente novamente.');
+            console.error('jsPDF not available:', window.jspdf, window.jsPDF);
+            return;
+        }
+
+        const doc = new jsPDFLib({ orientation: 'landscape', unit: 'mm', format: 'a4' });
 
     let yPosition = 20;
 
@@ -866,29 +874,33 @@ function generateFuelPDF() {
         log.efficiency ? `${log.efficiency} km/L` : '—'
     ]);
 
-    doc.autoTable({
-        startY: yPosition,
-        head: [headers],
-        body: data,
-        theme: 'grid',
-        headStyles: { fillColor: [200, 200, 200], textColor: [0, 0, 0], fontStyle: 'bold' },
-        bodyStyles: { textColor: [0, 0, 0] },
-        margin: { top: 20 }
-    });
+        doc.autoTable({
+            startY: yPosition,
+            head: [headers],
+            body: data,
+            theme: 'grid',
+            headStyles: { fillColor: [200, 200, 200], textColor: [0, 0, 0], fontStyle: 'bold' },
+            bodyStyles: { textColor: [0, 0, 0] },
+            margin: { top: 20 }
+        });
 
-    // Summary
-    yPosition = doc.lastAutoTable.finalY + 15;
-    doc.setFont('helvetica', 'bold');
-    doc.text('Resumo:', 15, yPosition);
+        // Summary
+        yPosition = doc.lastAutoTable.finalY + 15;
+        doc.setFont('helvetica', 'bold');
+        doc.text('Resumo:', 15, yPosition);
 
-    yPosition += 7;
-    doc.setFont('helvetica', 'normal');
-    const avgEfficiency = calculateAverageEfficiency();
-    doc.text(`Total de abastecimentos: ${logs.length}`, 15, yPosition);
-    yPosition += 7;
-    doc.text(`Eficiência média: ${avgEfficiency ? formatDecimal(avgEfficiency, 2) + ' km/L' : '—'}`, 15, yPosition);
+        yPosition += 7;
+        doc.setFont('helvetica', 'normal');
+        const avgEfficiency = calculateAverageEfficiency();
+        doc.text(`Total de abastecimentos: ${logs.length}`, 15, yPosition);
+        yPosition += 7;
+        doc.text(`Eficiência média: ${avgEfficiency ? formatDecimal(avgEfficiency, 2) + ' km/L' : '—'}`, 15, yPosition);
 
-    doc.save(`carflow-abastecimentos-${new Date().toISOString().split('T')[0]}.pdf`);
+        doc.save(`carflow-abastecimentos-${new Date().toISOString().split('T')[0]}.pdf`);
+    } catch (error) {
+        console.error('Erro ao gerar PDF de abastecimento:', error);
+        alert('Erro ao gerar PDF. Verifique o console para mais detalhes.');
+    }
 }
 
 function generateMaintenancePDF() {
@@ -899,60 +911,72 @@ function generateMaintenancePDF() {
         return;
     }
 
-    const { jsPDF } = window.jspdf;
-    const doc = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4' });
-
-    let yPosition = 20;
-
-    // Title
-    doc.setFont('helvetica', 'bold');
-    doc.setFontSize(16);
-    doc.text('🚗 CarFlow - Histórico de Manutenção', 105, yPosition, { align: 'center' });
-
-    // Date
-    yPosition += 10;
-    doc.setFontSize(10);
-    doc.setFont('helvetica', 'normal');
-    doc.text(`Gerado em: ${new Date().toLocaleDateString('pt-BR')}`, 105, yPosition, { align: 'center' });
-
-    // Table
-    yPosition += 15;
-    const headers = ['Item', 'Data Troca', 'Odômetro', 'Próxima Troca'];
-    const data = records.map(record => {
-        const nextMaint = getNextMaintenanceForItem(record.itemId);
-        let nextInfo = '—';
-
-        if (nextMaint) {
-            const parts = [];
-            if (nextMaint.nextOdometer) {
-                parts.push(`${nextMaint.nextOdometer.toLocaleString('pt-BR')} KM`);
-            }
-            if (nextMaint.nextDate) {
-                const date = new Date(nextMaint.nextDate);
-                parts.push(date.toLocaleDateString('pt-BR'));
-            }
-            nextInfo = parts.length > 0 ? parts.join(' / ') : '—';
+    try {
+        // Try to access jsPDF from window
+        const jsPDFLib = window.jspdf ? window.jspdf.jsPDF : window.jsPDF;
+        if (!jsPDFLib) {
+            alert('Erro: Biblioteca jsPDF não carregada. Tente novamente.');
+            console.error('jsPDF not available:', window.jspdf, window.jsPDF);
+            return;
         }
 
-        return [
-            record.itemName,
-            new Date(record.date).toLocaleDateString('pt-BR'),
-            `${record.odometer.toLocaleString('pt-BR')} KM`,
-            nextInfo
-        ];
-    });
+        const doc = new jsPDFLib({ orientation: 'portrait', unit: 'mm', format: 'a4' });
 
-    doc.autoTable({
-        startY: yPosition,
-        head: [headers],
-        body: data,
-        theme: 'grid',
-        headStyles: { fillColor: [200, 200, 200], textColor: [0, 0, 0], fontStyle: 'bold' },
-        bodyStyles: { textColor: [0, 0, 0] },
-        margin: { top: 20 }
-    });
+        let yPosition = 20;
 
-    doc.save(`carflow-manutencao-${new Date().toISOString().split('T')[0]}.pdf`);
+        // Title
+        doc.setFont('helvetica', 'bold');
+        doc.setFontSize(16);
+        doc.text('🚗 CarFlow - Histórico de Manutenção', 105, yPosition, { align: 'center' });
+
+        // Date
+        yPosition += 10;
+        doc.setFontSize(10);
+        doc.setFont('helvetica', 'normal');
+        doc.text(`Gerado em: ${new Date().toLocaleDateString('pt-BR')}`, 105, yPosition, { align: 'center' });
+
+        // Table
+        yPosition += 15;
+        const headers = ['Item', 'Data Troca', 'Odômetro', 'Próxima Troca'];
+        const data = records.map(record => {
+            const nextMaint = getNextMaintenanceForItem(record.itemId);
+            let nextInfo = '—';
+
+            if (nextMaint) {
+                const parts = [];
+                if (nextMaint.nextOdometer) {
+                    parts.push(`${nextMaint.nextOdometer.toLocaleString('pt-BR')} KM`);
+                }
+                if (nextMaint.nextDate) {
+                    const date = new Date(nextMaint.nextDate);
+                    parts.push(date.toLocaleDateString('pt-BR'));
+                }
+                nextInfo = parts.length > 0 ? parts.join(' / ') : '—';
+            }
+
+            return [
+                record.itemName,
+                new Date(record.date).toLocaleDateString('pt-BR'),
+                `${record.odometer.toLocaleString('pt-BR')} KM`,
+                nextInfo
+            ];
+        });
+
+        doc.autoTable({
+            startY: yPosition,
+            head: [headers],
+            body: data,
+            theme: 'grid',
+            headStyles: { fillColor: [200, 200, 200], textColor: [0, 0, 0], fontStyle: 'bold' },
+            bodyStyles: { textColor: [0, 0, 0] },
+            margin: { top: 20 }
+        });
+
+        doc.save(`carflow-manutencao-${new Date().toISOString().split('T')[0]}.pdf`);
+    } catch (error) {
+        console.error('Erro ao gerar PDF de manutenção:', error);
+        alert('Erro ao gerar PDF. Verifique o console para mais detalhes.');
+    }
 }
 
 // ============================================================================
