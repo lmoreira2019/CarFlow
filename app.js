@@ -17,7 +17,8 @@ const MAINTENANCE_ITEMS = {
     brake_pads: { name: 'Pastilha de Freio', id: 'brake_pads' },
     coolant: { name: 'Líquido de Arrefecimento', id: 'coolant' },
     timing_belt: { name: 'Correia Dentada', id: 'timing_belt' },
-    timing_chain: { name: 'Corrente de Comando', id: 'timing_chain' }
+    timing_chain: { name: 'Corrente de Comando', id: 'timing_chain' },
+    suspension: { name: 'Suspensão', id: 'suspension' }
 };
 
 // Efficiency classification
