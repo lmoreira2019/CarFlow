@@ -6,7 +6,8 @@
 const STORAGE_KEYS = {
     FUEL_LOGS: 'carflow_fuel_logs',
     MAINTENANCE_RECORDS: 'carflow_maintenance_records',
-    VEHICLE_INFO: 'carflow_vehicle_info'
+    VEHICLE_INFO: 'carflow_vehicle_info',
+    MAINTENANCE_TARGETS: 'carflow_maintenance_targets'
 };
 
 const MAINTENANCE_ITEMS = {
@@ -22,6 +23,16 @@ const MAINTENANCE_ITEMS = {
     suspension: { name: 'Suspensão', id: 'suspension' },
     spark_plugs: { name: 'Velas', id: 'spark_plugs' }
 };
+
+function getMaintenanceTargets() {
+    return getStoredData(STORAGE_KEYS.MAINTENANCE_TARGETS, {});
+}
+
+function setMaintenanceTarget(itemId, value) {
+    const targets = getMaintenanceTargets();
+    targets[itemId] = value ? parseInt(value) : null;
+    saveData(STORAGE_KEYS.MAINTENANCE_TARGETS, targets);
+}
 
 // Efficiency classification
 const EFFICIENCY_LEVELS = {
@@ -1261,17 +1272,20 @@ document.addEventListener('DOMContentLoaded', function() {
     displayVehicleInfo();
 
     // Vehicle form submission
-    document.getElementById('vehicleForm').addEventListener('submit', function(e) {
-        e.preventDefault();
+    const vehicleForm = document.getElementById('vehicleForm');
+    if (vehicleForm) {
+        vehicleForm.addEventListener('submit', function(e) {
+            e.preventDefault();
 
-        const brand = document.getElementById('vehicleBrand').value.trim();
-        const model = document.getElementById('vehicleModel').value.trim();
-        const year = document.getElementById('vehicleYear').value;
+            const brand = document.getElementById('vehicleBrand').value.trim();
+            const model = document.getElementById('vehicleModel').value.trim();
+            const year = document.getElementById('vehicleYear').value;
 
-        saveVehicleInfo(brand, model, year);
-        displayVehicleInfo();
-        alert('✅ Informações do veículo salvas com sucesso!');
-    });
+            saveVehicleInfo(brand, model, year);
+            displayVehicleInfo();
+            alert('✅ Informações do veículo salvas com sucesso!');
+        });
+    }
 
     // Load maintenance targets into form
     const targets = getMaintenanceTargets();
@@ -1285,11 +1299,10 @@ document.addEventListener('DOMContentLoaded', function() {
 
     // Set today's date as default for maintenance
     const today = new Date().toISOString().split('T')[0];
-    document.getElementById('maintenanceDate').value = today;
-
-    // Setup smart inputs for edit modals
-    const editFuelModal = document.getElementById('editFuelModal');
-    editFuelModal.addEventListener('shown', setupSmartInputs);
+    const maintenanceDateInput = document.getElementById('maintenanceDate');
+    if (maintenanceDateInput) {
+        maintenanceDateInput.value = today;
+    }
 
     // Edit fuel form submission
     document.getElementById('editFuelForm').addEventListener('submit', function(e) {
