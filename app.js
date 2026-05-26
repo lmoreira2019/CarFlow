@@ -784,26 +784,32 @@ function generateFuelPDF() {
         return;
     }
 
-    // Create a temporary element with inline styles
-    const container = document.createElement('div');
-    container.style.cssText = 'padding: 20px; background: white; color: black; font-family: Arial, sans-serif;';
+    // Use existing hidden element or create one
+    let container = document.getElementById('fuelPdfContent');
+    if (!container) {
+        container = document.createElement('div');
+        container.id = 'fuelPdfContent';
+        container.style.cssText = 'display: none;';
+        document.body.appendChild(container);
+    }
 
     let html = `
-        <h1 style="margin-top: 0; text-align: center;">🚗 CarFlow - Histórico de Abastecimentos</h1>
-        <p style="text-align: center; color: #666;">Gerado em: ${new Date().toLocaleDateString('pt-BR')}</p>
-        <hr/>
-        <table style="width: 100%; border-collapse: collapse; margin-top: 20px; border: 1px solid #000;">
-            <thead>
-                <tr style="background-color: #f0f0f0;">
-                    <th style="padding: 10px; border: 1px solid #000; text-align: left;">Data</th>
-                    <th style="padding: 10px; border: 1px solid #000; text-align: left;">Odômetro</th>
-                    <th style="padding: 10px; border: 1px solid #000; text-align: left;">Litros</th>
-                    <th style="padding: 10px; border: 1px solid #000; text-align: left;">Preço/L</th>
-                    <th style="padding: 10px; border: 1px solid #000; text-align: left;">Total</th>
-                    <th style="padding: 10px; border: 1px solid #000; text-align: left;">Eficiência</th>
-                </tr>
-            </thead>
-            <tbody>
+        <div style="padding: 20px; background: white; color: black; font-family: Arial, sans-serif; width: 100%;">
+            <h1 style="margin-top: 0; text-align: center;">🚗 CarFlow - Histórico de Abastecimentos</h1>
+            <p style="text-align: center; color: #666;">Gerado em: ${new Date().toLocaleDateString('pt-BR')}</p>
+            <hr style="border: 1px solid #000;"/>
+            <table style="width: 100%; border-collapse: collapse; margin-top: 20px; border: 1px solid #000;">
+                <thead>
+                    <tr style="background-color: #f0f0f0;">
+                        <th style="padding: 10px; border: 1px solid #000; text-align: left;">Data</th>
+                        <th style="padding: 10px; border: 1px solid #000; text-align: left;">Odômetro</th>
+                        <th style="padding: 10px; border: 1px solid #000; text-align: left;">Litros</th>
+                        <th style="padding: 10px; border: 1px solid #000; text-align: left;">Preço/L</th>
+                        <th style="padding: 10px; border: 1px solid #000; text-align: left;">Total</th>
+                        <th style="padding: 10px; border: 1px solid #000; text-align: left;">Eficiência</th>
+                    </tr>
+                </thead>
+                <tbody>
     `;
 
     logs.forEach(log => {
@@ -812,43 +818,47 @@ function generateFuelPDF() {
         const efficiency = log.efficiency ? log.efficiency : '—';
 
         html += `
-            <tr>
-                <td style="padding: 10px; border: 1px solid #000;">${dateStr}</td>
-                <td style="padding: 10px; border: 1px solid #000;">${log.odometer} KM</td>
-                <td style="padding: 10px; border: 1px solid #000;">${formatDecimal(log.liters, 2)} L</td>
-                <td style="padding: 10px; border: 1px solid #000;">R$ ${formatDecimal(log.pricePerLiter, 2)}</td>
-                <td style="padding: 10px; border: 1px solid #000;">R$ ${formatDecimal(log.totalSpent, 2)}</td>
-                <td style="padding: 10px; border: 1px solid #000;">${efficiency}</td>
-            </tr>
+                    <tr>
+                        <td style="padding: 10px; border: 1px solid #000;">${dateStr}</td>
+                        <td style="padding: 10px; border: 1px solid #000;">${log.odometer} KM</td>
+                        <td style="padding: 10px; border: 1px solid #000;">${formatDecimal(log.liters, 2)} L</td>
+                        <td style="padding: 10px; border: 1px solid #000;">R$ ${formatDecimal(log.pricePerLiter, 2)}</td>
+                        <td style="padding: 10px; border: 1px solid #000;">R$ ${formatDecimal(log.totalSpent, 2)}</td>
+                        <td style="padding: 10px; border: 1px solid #000;">${efficiency}</td>
+                    </tr>
         `;
     });
 
     const avgEfficiency = calculateAverageEfficiency();
     html += `
-            </tbody>
-        </table>
-        <hr/>
-        <div style="margin-top: 20px; font-size: 13px; color: #333;">
-            <p><strong>Resumo:</strong></p>
-            <p>Total de abastecimentos: <strong>${logs.length}</strong></p>
-            <p>Eficiência média: <strong>${avgEfficiency ? formatDecimal(avgEfficiency, 2) + ' km/L' : '—'}</strong></p>
+                </tbody>
+            </table>
+            <hr style="border: 1px solid #000;"/>
+            <div style="margin-top: 20px; font-size: 13px; color: #333;">
+                <p><strong>Resumo:</strong></p>
+                <p>Total de abastecimentos: <strong>${logs.length}</strong></p>
+                <p>Eficiência média: <strong>${avgEfficiency ? formatDecimal(avgEfficiency, 2) + ' km/L' : '—'}</strong></p>
+            </div>
         </div>
     `;
 
     container.innerHTML = html;
+    container.style.display = 'block';
 
     // Wait a moment and generate PDF
     setTimeout(() => {
         const opt = {
-            margin: [10, 10, 10, 10],
+            margin: 10,
             filename: `carflow-abastecimentos-${new Date().toISOString().split('T')[0]}.pdf`,
             image: { type: 'jpeg', quality: 0.98 },
-            html2canvas: { scale: 2, useCORS: true },
+            html2canvas: { scale: 2, useCORS: true, allowTaint: true, backgroundColor: '#ffffff' },
             jsPDF: { orientation: 'landscape', unit: 'mm', format: 'a4' }
         };
 
-        html2pdf().set(opt).from(container).save();
-    }, 100);
+        html2pdf().set(opt).from(container).save().finally(() => {
+            container.style.display = 'none';
+        });
+    }, 200);
 }
 
 function generateMaintenancePDF() {
@@ -859,24 +869,30 @@ function generateMaintenancePDF() {
         return;
     }
 
-    // Create a temporary element with inline styles
-    const container = document.createElement('div');
-    container.style.cssText = 'padding: 20px; background: white; color: black; font-family: Arial, sans-serif;';
+    // Use existing hidden element or create one
+    let container = document.getElementById('maintenancePdfContent');
+    if (!container) {
+        container = document.createElement('div');
+        container.id = 'maintenancePdfContent';
+        container.style.cssText = 'display: none;';
+        document.body.appendChild(container);
+    }
 
     let html = `
-        <h1 style="margin-top: 0; text-align: center;">🚗 CarFlow - Histórico de Manutenção</h1>
-        <p style="text-align: center; color: #666;">Gerado em: ${new Date().toLocaleDateString('pt-BR')}</p>
-        <hr/>
-        <table style="width: 100%; border-collapse: collapse; margin-top: 20px; border: 1px solid #000;">
-            <thead>
-                <tr style="background-color: #f0f0f0;">
-                    <th style="padding: 10px; border: 1px solid #000; text-align: left;">Item</th>
-                    <th style="padding: 10px; border: 1px solid #000; text-align: left;">Data Troca</th>
-                    <th style="padding: 10px; border: 1px solid #000; text-align: left;">Odômetro</th>
-                    <th style="padding: 10px; border: 1px solid #000; text-align: left;">Próxima Troca</th>
-                </tr>
-            </thead>
-            <tbody>
+        <div style="padding: 20px; background: white; color: black; font-family: Arial, sans-serif; width: 100%;">
+            <h1 style="margin-top: 0; text-align: center;">🚗 CarFlow - Histórico de Manutenção</h1>
+            <p style="text-align: center; color: #666;">Gerado em: ${new Date().toLocaleDateString('pt-BR')}</p>
+            <hr style="border: 1px solid #000;"/>
+            <table style="width: 100%; border-collapse: collapse; margin-top: 20px; border: 1px solid #000;">
+                <thead>
+                    <tr style="background-color: #f0f0f0;">
+                        <th style="padding: 10px; border: 1px solid #000; text-align: left;">Item</th>
+                        <th style="padding: 10px; border: 1px solid #000; text-align: left;">Data Troca</th>
+                        <th style="padding: 10px; border: 1px solid #000; text-align: left;">Odômetro</th>
+                        <th style="padding: 10px; border: 1px solid #000; text-align: left;">Próxima Troca</th>
+                    </tr>
+                </thead>
+                <tbody>
     `;
 
     records.forEach(record => {
@@ -899,34 +915,38 @@ function generateMaintenancePDF() {
         const dateStr = date.toLocaleDateString('pt-BR');
 
         html += `
-            <tr>
-                <td style="padding: 10px; border: 1px solid #000;">${record.itemName}</td>
-                <td style="padding: 10px; border: 1px solid #000;">${dateStr}</td>
-                <td style="padding: 10px; border: 1px solid #000;">${record.odometer.toLocaleString('pt-BR')} KM</td>
-                <td style="padding: 10px; border: 1px solid #000;">${nextInfo}</td>
-            </tr>
+                    <tr>
+                        <td style="padding: 10px; border: 1px solid #000;">${record.itemName}</td>
+                        <td style="padding: 10px; border: 1px solid #000;">${dateStr}</td>
+                        <td style="padding: 10px; border: 1px solid #000;">${record.odometer.toLocaleString('pt-BR')} KM</td>
+                        <td style="padding: 10px; border: 1px solid #000;">${nextInfo}</td>
+                    </tr>
         `;
     });
 
     html += `
-            </tbody>
-        </table>
+                </tbody>
+            </table>
+        </div>
     `;
 
     container.innerHTML = html;
+    container.style.display = 'block';
 
     // Wait a moment and generate PDF
     setTimeout(() => {
         const opt = {
-            margin: [10, 10, 10, 10],
+            margin: 10,
             filename: `carflow-manutencao-${new Date().toISOString().split('T')[0]}.pdf`,
             image: { type: 'jpeg', quality: 0.98 },
-            html2canvas: { scale: 2, useCORS: true },
+            html2canvas: { scale: 2, useCORS: true, allowTaint: true, backgroundColor: '#ffffff' },
             jsPDF: { orientation: 'portrait', unit: 'mm', format: 'a4' }
         };
 
-        html2pdf().set(opt).from(container).save();
-    }, 100);
+        html2pdf().set(opt).from(container).save().finally(() => {
+            container.style.display = 'none';
+        });
+    }, 200);
 }
 
 // ============================================================================
@@ -1198,6 +1218,17 @@ document.addEventListener('DOMContentLoaded', function() {
         cameraMaintenanceBtn.addEventListener('click', function(e) {
             e.preventDefault();
             console.log('📷 Clicou no botão câmera (manutenção)!');
+            openCameraChoice();
+        });
+    }
+
+    // Maintenance Photo Button (Attachment)
+    const maintenancePhotoBtn = document.getElementById('maintenancePhotoBtn');
+    if (maintenancePhotoBtn) {
+        maintenancePhotoBtn.addEventListener('click', function(e) {
+            e.preventDefault();
+            console.log('📷 Clicou para anexar comprovante!');
+            cameraFieldType = 'receipt';
             openCameraChoice();
         });
     }
