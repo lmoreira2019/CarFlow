@@ -1294,6 +1294,7 @@ document.addEventListener('DOMContentLoaded', function() {
     // Fuel form submission
     document.getElementById('fuelForm').addEventListener('submit', function(e) {
         e.preventDefault();
+        console.log('🔵 Formulário de combustível enviado');
 
         const odometer = document.getElementById('fuelOdometer').value;
         let liters = document.getElementById('fuelLiters').value;
@@ -1302,33 +1303,44 @@ document.addEventListener('DOMContentLoaded', function() {
         const dateTime = document.getElementById('fuelDateTime').value;
         const gasStation = document.getElementById('fuelGasStation').value;
 
+        console.log('📝 Valores capturados:', { odometer, liters, pricePerLiter, totalSpent });
+
         // Ensure all commas are converted to dots
         liters = liters ? String(liters).replace(/,/g, '.') : '';
         pricePerLiter = pricePerLiter ? String(pricePerLiter).replace(/,/g, '.') : '';
         totalSpent = totalSpent ? String(totalSpent).replace(/,/g, '.') : '';
 
         if (!odometer) {
+            console.error('❌ Odômetro vazio');
             alert('Odômetro é obrigatório!');
             return;
         }
 
         const result = calculateSmartFuel(liters, pricePerLiter, totalSpent);
+        console.log('🧮 Resultado do cálculo:', result);
 
         // Normalize and check
         const normalizedLiters = normalizeNumber(result.liters);
         const normalizedPrice = normalizeNumber(result.pricePerLiter);
         const normalizedTotal = normalizeNumber(result.totalSpent);
 
+        console.log('✅ Valores normalizados:', { normalizedLiters, normalizedPrice, normalizedTotal });
+
         if (!normalizedLiters || !normalizedPrice || !normalizedTotal) {
+            console.error('❌ Campos obrigatórios vazios após normalização');
             alert('Preencha odômetro + 2 dos 3 campos de combustível!');
             return;
         }
 
+        console.log('💾 Salvando abastecimento...');
         addFuelLog(odometer, normalizedLiters, normalizedPrice, normalizedTotal, dateTime, gasStation);
+        console.log('✅ Abastecimento salvo com sucesso!');
+
         updateUI();
 
         // Reset form
         this.reset();
+        alert('✅ Abastecimento registrado com sucesso!');
     });
 
     // Maintenance form submission
