@@ -32,6 +32,30 @@ const EFFICIENCY_LEVELS = {
 };
 
 // ============================================================================
+// Brand Logos Database
+// ============================================================================
+
+const BRAND_LOGOS = {
+    'toyota': 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjAwIiBoZWlnaHQ9IjEyMCIgdmlld0JveD0iMCAwIDIwMCAxMjAiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+PHJlY3Qgd2lkdGg9IjIwMCIgaGVpZ2h0PSIxMjAiIGZpbGw9IiNmZmYiLz48dGV4dCB4PSIxMDAiIHk9IjYwIiBmb250LXNpemU9IjQ4IiBmb250LXdlaWdodD0iYm9sZCIgdGV4dC1hbmNob3I9Im1pZGRsZSIgZG9taW5hbnQtYmFzZWxpbmU9Im1pZGRsZSIgZmlsbD0iIzAwN0FCQiI+VE9ZT1RBPC90ZXh0Pjwvc3ZnPg==',
+    'hyundai': 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjAwIiBoZWlnaHQ9IjEyMCIgdmlld0JveD0iMCAwIDIwMCAxMjAiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+PHJlY3Qgd2lkdGg9IjIwMCIgaGVpZ2h0PSIxMjAiIGZpbGw9IiNmZmYiLz48dGV4dCB4PSIxMDAiIHk9IjYwIiBmb250LXNpemU9IjQ4IiBmb250LXdlaWdodD0iYm9sZCIgdGV4dC1hbmNob3I9Im1pZGRsZSIgZG9taW5hbnQtYmFzZWxpbmU9Im1pZGRsZSIgZmlsbD0iIzAwMzJDQiI+SFlVTkRBSTwvdGV4dD48L3N2Zz4=',
+    'volkswagen': 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjAwIiBoZWlnaHQ9IjEyMCIgdmlld0JveD0iMCAwIDIwMCAxMjAiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+PHJlY3Qgd2lkdGg9IjIwMCIgaGVpZ2h0PSIxMjAiIGZpbGw9IiNmZmYiLz48dGV4dCB4PSIxMDAiIHk9IjYwIiBmb250LXNpemU9IjQ4IiBmb250LXdlaWdodD0iYm9sZCIgdGV4dC1hbmNob3I9Im1pZGRsZSIgZG9taW5hbnQtYmFzZWxpbmU9Im1pZGRsZSIgZmlsbD0iIzAwMDAwMCI+Vlc8L3RleHQ+PC9zdmc+',
+    'ford': 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjAwIiBoZWlnaHQ9IjEyMCIgdmlld0JveD0iMCAwIDIwMCAxMjAiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+PHJlY3Qgd2lkdGg9IjIwMCIgaGVpZ2h0PSIxMjAiIGZpbGw9IiNmZmYiLz48dGV4dCB4PSIxMDAiIHk9IjYwIiBmb250LXNpemU9IjQ4IiBmb250LXdlaWdodD0iYm9sZCIgdGV4dC1hbmNob3I9Im1pZGRsZSIgZG9taW5hbnQtYmFzZWxpbmU9Im1pZGRsZSIgZmlsbD0iIzAwNDRBRiI+Rk9SRDwvdGV4dD48L3N2Zz4=',
+    'chevrolet': 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjAwIiBoZWlnaHQ9IjEyMCIgdmlld0JveD0iMCAwIDIwMCAxMjAiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+PHJlY3Qgd2lkdGg9IjIwMCIgaGVpZ2h0PSIxMjAiIGZpbGw9IiNmZmYiLz48dGV4dCB4PSIxMDAiIHk9IjYwIiBmb250LXNpemU9IjQ4IiBmb250LXdlaWdodD0iYm9sZCIgdGV4dC1hbmNob3I9Im1pZGRsZSIgZG9taW5hbnQtYmFzZWxpbmU9Im1pZGRsZSIgZmlsbD0iI0ZGQzAwMCI+Q0hFVlJPTEVUPC90ZXh0Pjwvc3ZnPg==',
+    'fiat': 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjAwIiBoZWlnaHQ9IjEyMCIgdmlld0JveD0iMCAwIDIwMCAxMjAiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+PHJlY3Qgd2lkdGg9IjIwMCIgaGVpZ2h0PSIxMjAiIGZpbGw9IiNmZmYiLz48dGV4dCB4PSIxMDAiIHk9IjYwIiBmb250LXNpemU9IjQ4IiBmb250LXdlaWdodD0iYm9sZCIgdGV4dC1hbmNob3I9Im1pZGRsZSIgZG9taW5hbnQtYmFzZWxpbmU9Im1pZGRsZSIgZmlsbD0iI0QzMDAwMiI+RklBVDwvdGV4dD48L3N2Zz4=',
+    'renault': 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjAwIiBoZWlnaHQ9IjEyMCIgdmlld0JveD0iMCAwIDIwMCAxMjAiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+PHJlY3Qgd2lkdGg9IjIwMCIgaGVpZ2h0PSIxMjAiIGZpbGw9IiNmZmYiLz48dGV4dCB4PSIxMDAiIHk9IjYwIiBmb250LXNpemU9IjQ4IiBmb250LXdlaWdodD0iYm9sZCIgdGV4dC1hbmNob3I9Im1pZGRsZSIgZG9taW5hbnQtYmFzZWxpbmU9Im1pZGRsZSIgZmlsbD0iI0ZGQkExNiI+UkVOQVVMVDwvdGV4dD48L3N2Zz4=',
+    'honda': 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjAwIiBoZWlnaHQ9IjEyMCIgdmlld0JveD0iMCAwIDIwMCAxMjAiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+PHJlY3Qgd2lkdGg9IjIwMCIgaGVpZ2h0PSIxMjAiIGZpbGw9IiNmZmYiLz48dGV4dCB4PSIxMDAiIHk9IjYwIiBmb250LXNpemU9IjQ4IiBmb250LXdlaWdodD0iYm9sZCIgdGV4dC1hbmNob3I9Im1pZGRsZSIgZG9taW5hbnQtYmFzZWxpbmU9Im1pZGRsZSIgZmlsbD0iI0ZGMDAwMCI+SE9OREE8L3RleHQ+PC9zdmc+',
+    'nissan': 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjAwIiBoZWlnaHQ9IjEyMCIgdmlld0JveD0iMCAwIDIwMCAxMjAiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+PHJlY3Qgd2lkdGg9IjIwMCIgaGVpZ2h0PSIxMjAiIGZpbGw9IiNmZmYiLz48dGV4dCB4PSIxMDAiIHk9IjYwIiBmb250LXNpemU9IjQ4IiBmb250LXdlaWdodD0iYm9sZCIgdGV4dC1hbmNob3I9Im1pZGRsZSIgZG9taW5hbnQtYmFzZWxpbmU9Im1pZGRsZSIgZmlsbD0iI0UzMDYxNiI+TklTU0FOPSC8L3RleHQ+PC9zdmc+',
+    'peugeot': 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjAwIiBoZWlnaHQ9IjEyMCIgdmlld0JveD0iMCAwIDIwMCAxMjAiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+PHJlY3Qgd2lkdGg9IjIwMCIgaGVpZ2h0PSIxMjAiIGZpbGw9IiNmZmYiLz48dGV4dCB4PSIxMDAiIHk9IjYwIiBmb250LXNpemU9IjQ4IiBmb250LXdlaWdodD0iYm9sZCIgdGV4dC1hbmNob3I9Im1pZGRsZSIgZG9taW5hbnQtYmFzZWxpbmU9Im1pZGRsZSIgZmlsbD0iIzAwMDAwMCI+UFVHRUFEVDwvdGV4dD48L3N2Zz4=',
+    'citroen': 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjAwIiBoZWlnaHQ9IjEyMCIgdmlld0JveD0iMCAwIDIwMCAxMjAiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+PHJlY3Qgd2lkdGg9IjIwMCIgaGVpZ2h0PSIxMjAiIGZpbGw9IiNmZmYiLz48dGV4dCB4PSIxMDAiIHk9IjYwIiBmb250LXNpemU9IjQ4IiBmb250LXdlaWdodD0iYm9sZCIgdGV4dC1hbmNob3I9Im1pZGRsZSIgZG9taW5hbnQtYmFzZWxpbmU9Im1pZGRsZSIgZmlsbD0iI0ZGRDEwMCI+Q0lUUk9FTjwvdGV4dD48L3N2Zz4='
+};
+
+function getBrandLogo(brandName) {
+    if (!brandName) return null;
+    const normalized = brandName.toLowerCase().trim();
+    return BRAND_LOGOS[normalized] || null;
+}
+
+// ============================================================================
 // Vehicle Information Management
 // ============================================================================
 
@@ -852,15 +876,38 @@ function generateFuelPDF() {
 
         const doc = new jsPDFLib({ orientation: 'landscape', unit: 'mm', format: 'a4' });
 
-        let yPosition = 20;
+        let yPosition = 15;
+
+        // Get vehicle info for logo
+        const vehicleInfo = getVehicleInfo();
+        const logo = getBrandLogo(vehicleInfo.brand);
+
+        // Add logo if found
+        if (logo) {
+            try {
+                doc.addImage(logo, 'SVG', 15, 8, 25, 15);
+                yPosition = 28;
+            } catch (e) {
+                console.warn('Erro ao adicionar logo:', e);
+            }
+        }
 
         // Title
         doc.setFont('helvetica', 'bold');
         doc.setFontSize(14);
-        doc.text('CarFlow - Historico de Abastecimentos', 105, yPosition, { align: 'center' });
+        const titleX = logo ? 50 : 105;
+        doc.text('CarFlow - Historico de Abastecimentos', titleX, yPosition, logo ? 'left' : 'center');
+
+        // Vehicle info
+        if (vehicleInfo.brand || vehicleInfo.model || vehicleInfo.year) {
+            doc.setFontSize(9);
+            doc.setFont('helvetica', 'normal');
+            const vehicleText = `${vehicleInfo.brand} ${vehicleInfo.model} ${vehicleInfo.year}`;
+            doc.text(vehicleText, titleX, yPosition + 5, logo ? 'left' : 'center');
+        }
 
         // Date
-        yPosition += 8;
+        yPosition += 12;
         doc.setFontSize(9);
         doc.setFont('helvetica', 'normal');
         doc.text(`Gerado em: ${new Date().toLocaleDateString('pt-BR')}`, 105, yPosition, { align: 'center' });
@@ -952,15 +999,38 @@ function generateMaintenancePDF() {
 
         const doc = new jsPDFLib({ orientation: 'portrait', unit: 'mm', format: 'a4' });
 
-        let yPosition = 20;
+        let yPosition = 15;
+
+        // Get vehicle info for logo
+        const vehicleInfo = getVehicleInfo();
+        const logo = getBrandLogo(vehicleInfo.brand);
+
+        // Add logo if found
+        if (logo) {
+            try {
+                doc.addImage(logo, 'SVG', 15, 8, 25, 15);
+                yPosition = 28;
+            } catch (e) {
+                console.warn('Erro ao adicionar logo:', e);
+            }
+        }
 
         // Title
         doc.setFont('helvetica', 'bold');
         doc.setFontSize(14);
-        doc.text('CarFlow - Historico de Manutencao', 105, yPosition, { align: 'center' });
+        const titleX = logo ? 50 : 105;
+        doc.text('CarFlow - Historico de Manutencao', titleX, yPosition, logo ? 'left' : 'center');
+
+        // Vehicle info
+        if (vehicleInfo.brand || vehicleInfo.model || vehicleInfo.year) {
+            doc.setFontSize(9);
+            doc.setFont('helvetica', 'normal');
+            const vehicleText = `${vehicleInfo.brand} ${vehicleInfo.model} ${vehicleInfo.year}`;
+            doc.text(vehicleText, titleX, yPosition + 5, logo ? 'left' : 'center');
+        }
 
         // Date
-        yPosition += 8;
+        yPosition += 12;
         doc.setFontSize(9);
         doc.setFont('helvetica', 'normal');
         doc.text(`Gerado em: ${new Date().toLocaleDateString('pt-BR')}`, 105, yPosition, { align: 'center' });
