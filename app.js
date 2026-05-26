@@ -838,68 +838,94 @@ function generateFuelPDF() {
     }
 
     try {
-        // Try to access jsPDF from window
-        const jsPDFLib = window.jspdf ? window.jspdf.jsPDF : window.jsPDF;
-        if (!jsPDFLib) {
-            alert('Erro: Biblioteca jsPDF não carregada. Tente novamente.');
-            console.error('jsPDF not available:', window.jspdf, window.jsPDF);
+        // Try to access jsPDF from window - supports both loading styles
+        let jsPDFLib;
+        if (window.jsPDF) {
+            jsPDFLib = window.jsPDF;
+        } else if (window.jspdf && window.jspdf.jsPDF) {
+            jsPDFLib = window.jspdf.jsPDF;
+        } else {
+            alert('Erro: Biblioteca jsPDF não carregada. Atualize a página e tente novamente.');
+            console.error('jsPDF not found. Available:', { jsPDF: window.jsPDF, jspdf: window.jspdf });
             return;
         }
 
         const doc = new jsPDFLib({ orientation: 'landscape', unit: 'mm', format: 'a4' });
 
-    let yPosition = 20;
+        let yPosition = 20;
 
-    // Title
-    doc.setFont('helvetica', 'bold');
-    doc.setFontSize(16);
-    doc.text('🚗 CarFlow - Histórico de Abastecimentos', 105, yPosition, { align: 'center' });
+        // Title
+        doc.setFont('helvetica', 'bold');
+        doc.setFontSize(14);
+        doc.text('CarFlow - Historico de Abastecimentos', 105, yPosition, { align: 'center' });
 
-    // Date
-    yPosition += 10;
-    doc.setFontSize(10);
-    doc.setFont('helvetica', 'normal');
-    doc.text(`Gerado em: ${new Date().toLocaleDateString('pt-BR')}`, 105, yPosition, { align: 'center' });
+        // Date
+        yPosition += 8;
+        doc.setFontSize(9);
+        doc.setFont('helvetica', 'normal');
+        doc.text(`Gerado em: ${new Date().toLocaleDateString('pt-BR')}`, 105, yPosition, { align: 'center' });
 
-    // Table
-    yPosition += 15;
-    const headers = ['Data', 'Odômetro', 'Litros', 'Preço/L', 'Total', 'Posto', 'Eficiência'];
-    const data = logs.map(log => [
-        new Date(log.timestamp).toLocaleDateString('pt-BR'),
-        `${log.odometer} KM`,
-        `${formatDecimal(log.liters, 2)} L`,
-        `R$ ${formatDecimal(log.pricePerLiter, 2)}`,
-        `R$ ${formatDecimal(log.totalSpent, 2)}`,
-        log.gasStation || '—',
-        log.efficiency ? `${log.efficiency} km/L` : '—'
-    ]);
+        // Table headers
+        yPosition += 12;
+        doc.setFontSize(9);
+        doc.setFont('helvetica', 'bold');
+        const colWidths = [25, 20, 18, 18, 20, 25, 20];
+        const headers = ['Data', 'Odometro', 'Litros', 'Preco/L', 'Total', 'Posto', 'Eficiencia'];
+        let xPos = 15;
 
-        doc.autoTable({
-            startY: yPosition,
-            head: [headers],
-            body: data,
-            theme: 'grid',
-            headStyles: { fillColor: [200, 200, 200], textColor: [0, 0, 0], fontStyle: 'bold' },
-            bodyStyles: { textColor: [0, 0, 0] },
-            margin: { top: 20 }
+        headers.forEach((header, i) => {
+            doc.text(header, xPos, yPosition);
+            xPos += colWidths[i];
+        });
+
+        // Table rows
+        yPosition += 6;
+        doc.setFont('helvetica', 'normal');
+        doc.setFontSize(8);
+
+        logs.forEach(log => {
+            const date = new Date(log.timestamp).toLocaleDateString('pt-BR');
+            const odometer = `${log.odometer} KM`;
+            const liters = `${formatDecimal(log.liters, 2)} L`;
+            const pricePerLiter = `R$ ${formatDecimal(log.pricePerLiter, 2)}`;
+            const total = `R$ ${formatDecimal(log.totalSpent, 2)}`;
+            const station = log.gasStation || '—';
+            const efficiency = log.efficiency ? `${log.efficiency}` : '—';
+
+            const rowData = [date, odometer, liters, pricePerLiter, total, station, efficiency];
+            xPos = 15;
+
+            rowData.forEach((cell, i) => {
+                doc.text(cell, xPos, yPosition);
+                xPos += colWidths[i];
+            });
+
+            yPosition += 5;
+            if (yPosition > 250) {
+                doc.addPage();
+                yPosition = 20;
+            }
         });
 
         // Summary
-        yPosition = doc.lastAutoTable.finalY + 15;
+        yPosition += 10;
         doc.setFont('helvetica', 'bold');
+        doc.setFontSize(9);
         doc.text('Resumo:', 15, yPosition);
 
-        yPosition += 7;
+        yPosition += 6;
         doc.setFont('helvetica', 'normal');
         const avgEfficiency = calculateAverageEfficiency();
         doc.text(`Total de abastecimentos: ${logs.length}`, 15, yPosition);
-        yPosition += 7;
-        doc.text(`Eficiência média: ${avgEfficiency ? formatDecimal(avgEfficiency, 2) + ' km/L' : '—'}`, 15, yPosition);
+        yPosition += 5;
+        doc.text(`Eficiencia media: ${avgEfficiency ? formatDecimal(avgEfficiency, 2) + ' km/L' : '—'}`, 15, yPosition);
 
-        doc.save(`carflow-abastecimentos-${new Date().toISOString().split('T')[0]}.pdf`);
+        const filename = `carflow-abastecimentos-${new Date().toISOString().split('T')[0]}.pdf`;
+        doc.save(filename);
+        console.log('PDF gerado:', filename);
     } catch (error) {
         console.error('Erro ao gerar PDF de abastecimento:', error);
-        alert('Erro ao gerar PDF. Verifique o console para mais detalhes.');
+        alert('Erro: ' + error.message);
     }
 }
 
@@ -912,11 +938,15 @@ function generateMaintenancePDF() {
     }
 
     try {
-        // Try to access jsPDF from window
-        const jsPDFLib = window.jspdf ? window.jspdf.jsPDF : window.jsPDF;
-        if (!jsPDFLib) {
-            alert('Erro: Biblioteca jsPDF não carregada. Tente novamente.');
-            console.error('jsPDF not available:', window.jspdf, window.jsPDF);
+        // Try to access jsPDF from window - supports both loading styles
+        let jsPDFLib;
+        if (window.jsPDF) {
+            jsPDFLib = window.jsPDF;
+        } else if (window.jspdf && window.jspdf.jsPDF) {
+            jsPDFLib = window.jspdf.jsPDF;
+        } else {
+            alert('Erro: Biblioteca jsPDF não carregada. Atualize a página e tente novamente.');
+            console.error('jsPDF not found. Available:', { jsPDF: window.jsPDF, jspdf: window.jspdf });
             return;
         }
 
@@ -926,26 +956,41 @@ function generateMaintenancePDF() {
 
         // Title
         doc.setFont('helvetica', 'bold');
-        doc.setFontSize(16);
-        doc.text('🚗 CarFlow - Histórico de Manutenção', 105, yPosition, { align: 'center' });
+        doc.setFontSize(14);
+        doc.text('CarFlow - Historico de Manutencao', 105, yPosition, { align: 'center' });
 
         // Date
-        yPosition += 10;
-        doc.setFontSize(10);
+        yPosition += 8;
+        doc.setFontSize(9);
         doc.setFont('helvetica', 'normal');
         doc.text(`Gerado em: ${new Date().toLocaleDateString('pt-BR')}`, 105, yPosition, { align: 'center' });
 
-        // Table
-        yPosition += 15;
-        const headers = ['Item', 'Data Troca', 'Odômetro', 'Próxima Troca'];
-        const data = records.map(record => {
+        // Table headers
+        yPosition += 12;
+        doc.setFontSize(9);
+        doc.setFont('helvetica', 'bold');
+        const colWidths = [50, 30, 30, 50];
+        const headers = ['Item', 'Data Troca', 'Odometro', 'Proxima Troca'];
+        let xPos = 15;
+
+        headers.forEach((header, i) => {
+            doc.text(header, xPos, yPosition);
+            xPos += colWidths[i];
+        });
+
+        // Table rows
+        yPosition += 6;
+        doc.setFont('helvetica', 'normal');
+        doc.setFontSize(8);
+
+        records.forEach(record => {
             const nextMaint = getNextMaintenanceForItem(record.itemId);
             let nextInfo = '—';
 
             if (nextMaint) {
                 const parts = [];
                 if (nextMaint.nextOdometer) {
-                    parts.push(`${nextMaint.nextOdometer.toLocaleString('pt-BR')} KM`);
+                    parts.push(`${nextMaint.nextOdometer} KM`);
                 }
                 if (nextMaint.nextDate) {
                     const date = new Date(nextMaint.nextDate);
@@ -954,28 +999,33 @@ function generateMaintenancePDF() {
                 nextInfo = parts.length > 0 ? parts.join(' / ') : '—';
             }
 
-            return [
+            const date = new Date(record.date).toLocaleDateString('pt-BR');
+            const rowData = [
                 record.itemName,
-                new Date(record.date).toLocaleDateString('pt-BR'),
-                `${record.odometer.toLocaleString('pt-BR')} KM`,
+                date,
+                `${record.odometer} KM`,
                 nextInfo
             ];
+
+            xPos = 15;
+            rowData.forEach((cell, i) => {
+                doc.text(cell, xPos, yPosition);
+                xPos += colWidths[i];
+            });
+
+            yPosition += 5;
+            if (yPosition > 270) {
+                doc.addPage();
+                yPosition = 20;
+            }
         });
 
-        doc.autoTable({
-            startY: yPosition,
-            head: [headers],
-            body: data,
-            theme: 'grid',
-            headStyles: { fillColor: [200, 200, 200], textColor: [0, 0, 0], fontStyle: 'bold' },
-            bodyStyles: { textColor: [0, 0, 0] },
-            margin: { top: 20 }
-        });
-
-        doc.save(`carflow-manutencao-${new Date().toISOString().split('T')[0]}.pdf`);
+        const filename = `carflow-manutencao-${new Date().toISOString().split('T')[0]}.pdf`;
+        doc.save(filename);
+        console.log('PDF gerado:', filename);
     } catch (error) {
         console.error('Erro ao gerar PDF de manutenção:', error);
-        alert('Erro ao gerar PDF. Verifique o console para mais detalhes.');
+        alert('Erro: ' + error.message);
     }
 }
 
