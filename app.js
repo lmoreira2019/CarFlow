@@ -19,7 +19,8 @@ const MAINTENANCE_ITEMS = {
     coolant: { name: 'Líquido de Arrefecimento', id: 'coolant' },
     timing_belt: { name: 'Correia Dentada', id: 'timing_belt' },
     timing_chain: { name: 'Corrente de Comando', id: 'timing_chain' },
-    suspension: { name: 'Suspensão', id: 'suspension' }
+    suspension: { name: 'Suspensão', id: 'suspension' },
+    spark_plugs: { name: 'Velas', id: 'spark_plugs' }
 };
 
 // Efficiency classification
@@ -194,7 +195,7 @@ function calculateSmartFuel(liters, pricePerLiter, totalSpent) {
     return result;
 }
 
-function addFuelLog(odometer, liters, pricePerLiter, totalSpent) {
+function addFuelLog(odometer, liters, pricePerLiter, totalSpent, dateTime = null, gasStation = null) {
     const logs = getStoredData(STORAGE_KEYS.FUEL_LOGS, []);
 
     let previousLiters = null;
@@ -216,11 +217,12 @@ function addFuelLog(odometer, liters, pricePerLiter, totalSpent) {
 
     const newLog = {
         id: Date.now(),
-        timestamp: new Date().toISOString(),
+        timestamp: dateTime ? new Date(dateTime).toISOString() : new Date().toISOString(),
         odometer: parseInt(odometer),
         liters: parseFloat(formatDecimal(normalizedLiters, 2)),
         pricePerLiter: parseFloat(formatDecimal(normalizedPrice, 2)),
         totalSpent: parseFloat(formatDecimal(normalizedTotal, 2)),
+        gasStation: gasStation || null,
         efficiency: efficiency ? formatDecimal(efficiency, 2) : null,
         efficiencyClassification: efficiency ? getEfficiencyClassification(efficiency) : null
     };
@@ -473,6 +475,12 @@ function renderFuelLogs() {
                         <span class="log-label">Total Gasto</span>
                         <span class="log-value">R$ ${formatDecimal(log.totalSpent, 2)}</span>
                     </div>
+                    ${log.gasStation ? `
+                        <div class="log-item">
+                            <span class="log-label">Posto</span>
+                            <span class="log-value">${log.gasStation}</span>
+                        </div>
+                    ` : ''}
                     ${log.efficiency && classification ? `
                         <div class="log-item">
                             <span class="log-label">Eficiência</span>
@@ -851,6 +859,7 @@ function generateFuelPDF() {
                         <th style="padding: 10px; border: 1px solid #000; text-align: left;">Litros</th>
                         <th style="padding: 10px; border: 1px solid #000; text-align: left;">Preço/L</th>
                         <th style="padding: 10px; border: 1px solid #000; text-align: left;">Total</th>
+                        <th style="padding: 10px; border: 1px solid #000; text-align: left;">Posto</th>
                         <th style="padding: 10px; border: 1px solid #000; text-align: left;">Eficiência</th>
                     </tr>
                 </thead>
@@ -861,6 +870,7 @@ function generateFuelPDF() {
         const date = new Date(log.timestamp);
         const dateStr = date.toLocaleDateString('pt-BR');
         const efficiency = log.efficiency ? log.efficiency : '—';
+        const gasStation = log.gasStation || '—';
 
         html += `
                     <tr>
@@ -869,6 +879,7 @@ function generateFuelPDF() {
                         <td style="padding: 10px; border: 1px solid #000;">${formatDecimal(log.liters, 2)} L</td>
                         <td style="padding: 10px; border: 1px solid #000;">R$ ${formatDecimal(log.pricePerLiter, 2)}</td>
                         <td style="padding: 10px; border: 1px solid #000;">R$ ${formatDecimal(log.totalSpent, 2)}</td>
+                        <td style="padding: 10px; border: 1px solid #000;">${gasStation}</td>
                         <td style="padding: 10px; border: 1px solid #000;">${efficiency}</td>
                     </tr>
         `;
@@ -1179,6 +1190,8 @@ document.addEventListener('DOMContentLoaded', function() {
         const liters = document.getElementById('fuelLiters').value;
         const pricePerLiter = document.getElementById('pricePerLiter').value;
         const totalSpent = document.getElementById('totalSpent').value;
+        const dateTime = document.getElementById('fuelDateTime').value;
+        const gasStation = document.getElementById('fuelGasStation').value;
 
         if (!odometer) {
             alert('Odômetro é obrigatório!');
@@ -1197,7 +1210,7 @@ document.addEventListener('DOMContentLoaded', function() {
             return;
         }
 
-        addFuelLog(odometer, normalizedLiters, normalizedPrice, normalizedTotal);
+        addFuelLog(odometer, normalizedLiters, normalizedPrice, normalizedTotal, dateTime, gasStation);
         updateUI();
 
         // Reset form

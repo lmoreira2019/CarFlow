@@ -107,6 +107,27 @@
 
                         <div class="form-row">
                             <div class="form-group">
+                                <label for="fuelDateTime" class="form-label">Data e Hora</label>
+                                <input
+                                    type="datetime-local"
+                                    id="fuelDateTime"
+                                    class="form-input"
+                                >
+                            </div>
+
+                            <div class="form-group">
+                                <label for="fuelGasStation" class="form-label">Nome do Posto</label>
+                                <input
+                                    type="text"
+                                    id="fuelGasStation"
+                                    class="form-input"
+                                    placeholder="ex: Ipiranga, Shell..."
+                                >
+                            </div>
+                        </div>
+
+                        <div class="form-row">
+                            <div class="form-group">
                                 <label for="fuelLiters" class="form-label">Litros Abastecidos (L)</label>
                                 <input
                                     type="number"
@@ -209,6 +230,7 @@
                                     <option value="brake_pads">Pastilha de Freio</option>
                                     <option value="timing_belt">Correia Dentada</option>
                                     <option value="timing_chain">Corrente de Comando</option>
+                                    <option value="spark_plugs">Velas</option>
                                 </optgroup>
                                 <optgroup label="Sistema de Suspensão">
                                     <option value="suspension">Suspensão</option>
@@ -322,6 +344,10 @@
                             <div class="form-group">
                                 <label for="suspensionKM" class="form-label">Suspensão (KM)</label>
                                 <input type="number" id="suspensionKM" class="form-input" placeholder="ex: 100000" step="100">
+                            </div>
+                            <div class="form-group">
+                                <label for="sparkPlugsKM" class="form-label">Velas (KM)</label>
+                                <input type="number" id="sparkPlugsKM" class="form-input" placeholder="ex: 30000" step="100">
                             </div>
                         </div>
                         <button type="submit" class="btn btn-primary">Atualizar Todas as Metas</button>
