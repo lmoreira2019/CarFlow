@@ -1,0 +1,431 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="CarFlow - Rastreie consumo de combustível e manutenção do seu carro">
+    <meta name="theme-color" content="#0d1117">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="CarFlow">
+    <link rel="manifest" href="manifest.json">
+    <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 192 192'><rect fill='%230d1117' width='192' height='192'/><text x='50%' y='50%' font-size='120' fill='%2358a6ff' text-anchor='middle' dominant-baseline='central' font-weight='bold'>🚗</text></svg>">
+    <title>🚗 CarFlow - Rastreador de Combustível e Manutenção</title>
+    <link rel="stylesheet" href="style.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+</head>
+<body>
+    <div class="container">
+        <!-- Header -->
+        <header class="header">
+            <div class="header-content">
+                <h1 class="header-title">🚗 CarFlow</h1>
+                <p class="header-subtitle">Rastreador de Combustível e Manutenção</p>
+                <div id="saveStatus" class="save-status">
+                    <span id="saveIndicator" class="save-dot"></span>
+                    <span id="saveText">Dados salvos ✓</span>
+                </div>
+            </div>
+        </header>
+
+        <!-- Main Content -->
+        <main class="main-content">
+            <!-- Fuel Tracking Section -->
+            <section class="section">
+                <div class="section-header">
+                    <h2 class="section-title">⛽ Rastreamento de Combustível</h2>
+                </div>
+
+                <div class="card">
+                    <h3 class="card-title">Novo Abastecimento</h3>
+                    <p class="card-description">Preencha 3 campos: odômetro + 2 dos campos abaixo. O terceiro será calculado automaticamente.</p>
+                    <form id="fuelForm" class="form">
+                        <div class="form-group">
+                            <div style="display: flex; gap: var(--spacing-sm); align-items: flex-end;">
+                                <div style="flex: 1;">
+                                    <label for="fuelOdometer" class="form-label">Odômetro Atual (KM) *</label>
+                                    <input
+                                        type="number"
+                                        id="fuelOdometer"
+                                        class="form-input"
+                                        placeholder="ex: 45000"
+                                        required
+                                    >
+                                </div>
+                                <button type="button" id="cameraOdometerBtn" class="btn btn-secondary" style="width: auto; padding: 0.5rem 0.8rem; flex-shrink: 0;">📷</button>
+                            </div>
+                        </div>
+
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label for="fuelLiters" class="form-label">Litros Abastecidos (L)</label>
+                                <input
+                                    type="number"
+                                    id="fuelLiters"
+                                    class="form-input smart-input"
+                                    placeholder="ex: 10.5"
+                                    step="0.01"
+                                >
+                            </div>
+
+                            <div class="form-group">
+                                <label for="pricePerLiter" class="form-label">Preço por Litro (R$)</label>
+                                <input
+                                    type="number"
+                                    id="pricePerLiter"
+                                    class="form-input smart-input"
+                                    placeholder="ex: 7.50"
+                                    step="0.01"
+                                >
+                            </div>
+
+                            <div class="form-group">
+                                <label for="totalSpent" class="form-label">Total Gasto (R$)</label>
+                                <input
+                                    type="number"
+                                    id="totalSpent"
+                                    class="form-input smart-input"
+                                    placeholder="ex: 78.75"
+                                    step="0.01"
+                                >
+                            </div>
+                        </div>
+
+                        <div class="form-helper">
+                            <small>💡 Digite odômetro + 2 campos acima. O terceiro será calculado automaticamente.</small>
+                        </div>
+
+                        <button type="submit" class="btn btn-primary">Registrar Abastecimento</button>
+                    </form>
+                </div>
+
+                <!-- Fuel Metrics -->
+                <div class="metrics-grid">
+                    <div class="metric-card">
+                        <div class="metric-label">Total Registros</div>
+                        <div class="metric-value" id="totalEntries">0</div>
+                    </div>
+                    <div class="metric-card">
+                        <div class="metric-label">Eficiência Atual</div>
+                        <div class="metric-value" id="currentEfficiency">—</div>
+                        <div class="metric-unit">km/L</div>
+                    </div>
+                    <div class="metric-card">
+                        <div class="metric-label">Eficiência Média</div>
+                        <div class="metric-value" id="averageEfficiency">—</div>
+                        <div class="metric-unit">km/L</div>
+                    </div>
+                </div>
+
+                <!-- Recent Logs -->
+                <div class="card">
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: var(--spacing-md);">
+                        <h3 class="card-title" style="margin: 0;">Registros Recentes</h3>
+                        <button id="printFuelPdfBtn" class="btn btn-secondary" style="width: auto; padding: 0.5rem 1rem; font-size: 0.9rem;">📄 Imprimir PDF</button>
+                    </div>
+                    <div id="fuelLogsList" class="logs-list">
+                        <div class="empty-state">Nenhum registro de combustível ainda. Comece a rastrear seu consumo.</div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Maintenance Section -->
+            <section class="section">
+                <div class="section-header">
+                    <h2 class="section-title">🔧 Rastreamento de Manutenção</h2>
+                </div>
+
+                <!-- Maintenance Status Overview -->
+                <div id="maintenanceStatus" class="maintenance-grid">
+                    <!-- Generated dynamically -->
+                </div>
+
+                <!-- Add Maintenance Record -->
+                <div class="card">
+                    <h3 class="card-title">Registrar Manutenção Realizada</h3>
+                    <form id="maintenanceForm" class="form">
+                        <div class="form-group">
+                            <label for="maintenanceItem" class="form-label">Item de Manutenção *</label>
+                            <select id="maintenanceItem" class="form-input" required>
+                                <option value="">Selecione um item...</option>
+                                <optgroup label="Filtros e Fluidos">
+                                    <option value="oil_filter">Óleo do Motor & Filtro</option>
+                                    <option value="air_filter">Filtro de Ar do Motor</option>
+                                    <option value="fuel_filter">Filtro de Combustível</option>
+                                    <option value="cabin_filter">Filtro de Ar Condicionado</option>
+                                    <option value="coolant">Líquido de Arrefecimento</option>
+                                </optgroup>
+                                <optgroup label="Componentes Críticos">
+                                    <option value="battery">Bateria</option>
+                                    <option value="brake_pads">Pastilha de Freio</option>
+                                    <option value="timing_belt">Correia Dentada</option>
+                                    <option value="timing_chain">Corrente de Comando</option>
+                                </optgroup>
+                            </select>
+                        </div>
+
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label for="maintenanceDate" class="form-label">Data da Troca *</label>
+                                <input
+                                    type="date"
+                                    id="maintenanceDate"
+                                    class="form-input"
+                                    required
+                                >
+                            </div>
+
+                            <div class="form-group">
+                                <div style="display: flex; gap: var(--spacing-sm); align-items: flex-end;">
+                                    <div style="flex: 1;">
+                                        <label for="maintenanceOdometer" class="form-label">Odômetro (KM) *</label>
+                                        <input
+                                            type="number"
+                                            id="maintenanceOdometer"
+                                            class="form-input"
+                                            placeholder="ex: 45000"
+                                            required
+                                        >
+                                    </div>
+                                    <button type="button" id="cameraMaintenanceBtn" class="btn btn-secondary" style="width: auto; padding: 0.5rem 0.8rem; flex-shrink: 0;">📷</button>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label for="maintenanceIntervalKM" class="form-label">Próxima Troca em (KM)</label>
+                                <input
+                                    type="number"
+                                    id="maintenanceIntervalKM"
+                                    class="form-input"
+                                    placeholder="ex: 10000"
+                                    step="100"
+                                >
+                            </div>
+
+                            <div class="form-group">
+                                <label for="maintenanceIntervalMonths" class="form-label">Próxima Troca em (Meses)</label>
+                                <input
+                                    type="number"
+                                    id="maintenanceIntervalMonths"
+                                    class="form-input"
+                                    placeholder="ex: 6"
+                                    step="1"
+                                >
+                            </div>
+                        </div>
+
+                        <button type="submit" class="btn btn-primary">Registrar Manutenção</button>
+                    </form>
+                </div>
+
+                <!-- Update Maintenance Targets -->
+                <div class="card">
+                    <h3 class="card-title">Atualizar Metas de Manutenção</h3>
+                    <p class="card-description">Defina a quilometragem alvo para a próxima troca de manutenção</p>
+                    <form id="maintenanceTargetsForm" class="form">
+                        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: var(--spacing-md);">
+                            <div class="form-group">
+                                <label for="oilFilterKM" class="form-label">Óleo do Motor & Filtro (KM)</label>
+                                <input type="number" id="oilFilterKM" class="form-input" placeholder="ex: 46000" step="100">
+                            </div>
+                            <div class="form-group">
+                                <label for="airFilterKM" class="form-label">Filtro de Ar do Motor (KM)</label>
+                                <input type="number" id="airFilterKM" class="form-input" placeholder="ex: 47000" step="100">
+                            </div>
+                            <div class="form-group">
+                                <label for="fuelFilterKM" class="form-label">Filtro de Combustível (KM)</label>
+                                <input type="number" id="fuelFilterKM" class="form-input" placeholder="ex: 50000" step="100">
+                            </div>
+                            <div class="form-group">
+                                <label for="cabinFilterKM" class="form-label">Filtro de Ar Condicionado (KM)</label>
+                                <input type="number" id="cabinFilterKM" class="form-input" placeholder="ex: 52000" step="100">
+                            </div>
+                            <div class="form-group">
+                                <label for="batteryKM" class="form-label">Bateria (KM)</label>
+                                <input type="number" id="batteryKM" class="form-input" placeholder="ex: 60000" step="100">
+                            </div>
+                            <div class="form-group">
+                                <label for="brakePadsKM" class="form-label">Pastilha de Freio (KM)</label>
+                                <input type="number" id="brakePadsKM" class="form-input" placeholder="ex: 40000" step="100">
+                            </div>
+                            <div class="form-group">
+                                <label for="coolantKM" class="form-label">Líquido de Arrefecimento (KM)</label>
+                                <input type="number" id="coolantKM" class="form-input" placeholder="ex: 80000" step="100">
+                            </div>
+                            <div class="form-group">
+                                <label for="timingBeltKM" class="form-label">Correia Dentada (KM)</label>
+                                <input type="number" id="timingBeltKM" class="form-input" placeholder="ex: 120000" step="100">
+                            </div>
+                            <div class="form-group">
+                                <label for="timingChainKM" class="form-label">Corrente de Comando (KM)</label>
+                                <input type="number" id="timingChainKM" class="form-input" placeholder="ex: 150000" step="100">
+                            </div>
+                        </div>
+                        <button type="submit" class="btn btn-primary">Atualizar Todas as Metas</button>
+                    </form>
+                </div>
+
+                <!-- Maintenance History -->
+                <div class="card">
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: var(--spacing-md);">
+                        <h3 class="card-title" style="margin: 0;">Histórico de Manutenção</h3>
+                        <button id="printPdfBtn" class="btn btn-secondary" style="width: auto; padding: 0.5rem 1rem; font-size: 0.9rem;">📄 Imprimir PDF</button>
+                    </div>
+                    <div id="maintenanceHistory" class="logs-list">
+                        <div class="empty-state">Nenhum registro de manutenção ainda.</div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Actions -->
+            <section class="section">
+                <div class="card">
+                    <h3 class="card-title">Gerenciamento de Dados</h3>
+                    <div class="action-buttons">
+                        <button id="exportBtn" class="btn btn-secondary">📥 Exportar Dados (JSON)</button>
+                        <button id="importBtn" class="btn btn-secondary">📤 Importar Dados (JSON)</button>
+                    </div>
+                    <div class="action-buttons">
+                        <button id="debugBtn" class="btn btn-secondary">🐛 Ver Dados (Debug)</button>
+                        <button id="clearBtn" class="btn btn-danger">🗑️ Limpar Todos os Dados</button>
+                    </div>
+                </div>
+            </section>
+        </main>
+
+        <!-- Footer -->
+        <footer class="footer">
+            <p>🚗 CarFlow v2.0 • Rastreador de Combustível e Manutenção</p>
+            <p class="footer-note">Todos os dados são armazenados localmente em seu navegador</p>
+        </footer>
+    </div>
+
+    <!-- PDF Template (hidden) -->
+    <div id="pdfContent" style="display: none;">
+        <div id="pdfMaintenanceData"></div>
+    </div>
+
+    <!-- Import File Input (hidden) -->
+    <input type="file" id="importFileInput" accept=".json" style="display: none;">
+
+    <!-- Edit Fuel Modal -->
+    <div id="editFuelModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 class="modal-title">Editar Abastecimento</h2>
+                <button class="modal-close" onclick="closeFuelModal()">&times;</button>
+            </div>
+            <form id="editFuelForm" class="form">
+                <div class="form-group">
+                    <label for="editFuelOdometer" class="form-label">Odômetro (KM)</label>
+                    <input type="number" id="editFuelOdometer" class="form-input" required>
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="editFuelLiters" class="form-label">Litros (L)</label>
+                        <input type="number" id="editFuelLiters" class="form-input smart-input" step="0.01">
+                    </div>
+                    <div class="form-group">
+                        <label for="editPricePerLiter" class="form-label">Preço/L (R$)</label>
+                        <input type="number" id="editPricePerLiter" class="form-input smart-input" step="0.01">
+                    </div>
+                    <div class="form-group">
+                        <label for="editTotalSpent" class="form-label">Total (R$)</label>
+                        <input type="number" id="editTotalSpent" class="form-input smart-input" step="0.01">
+                    </div>
+                </div>
+                <div class="modal-buttons">
+                    <button type="button" class="btn btn-secondary" onclick="closeFuelModal()">Cancelar</button>
+                    <button type="submit" class="btn btn-primary">Salvar Alterações</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Edit Maintenance Modal -->
+    <div id="editMaintenanceModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 class="modal-title">Editar Manutenção</h2>
+                <button class="modal-close" onclick="closeMaintenanceModal()">&times;</button>
+            </div>
+            <form id="editMaintenanceForm" class="form">
+                <div class="form-group">
+                    <label for="editMaintenanceDate" class="form-label">Data da Troca</label>
+                    <input type="date" id="editMaintenanceDate" class="form-input" required>
+                </div>
+                <div class="form-group">
+                    <label for="editMaintenanceOdometer" class="form-label">Odômetro (KM)</label>
+                    <input type="number" id="editMaintenanceOdometer" class="form-input" required>
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="editMaintenanceIntervalKM" class="form-label">Próxima em (KM)</label>
+                        <input type="number" id="editMaintenanceIntervalKM" class="form-input" step="100">
+                    </div>
+                    <div class="form-group">
+                        <label for="editMaintenanceIntervalMonths" class="form-label">Próxima em (Meses)</label>
+                        <input type="number" id="editMaintenanceIntervalMonths" class="form-input" step="1">
+                    </div>
+                </div>
+                <div class="modal-buttons">
+                    <button type="button" class="btn btn-secondary" onclick="closeMaintenanceModal()">Cancelar</button>
+                    <button type="submit" class="btn btn-primary">Salvar Alterações</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Camera Choice Modal -->
+    <div id="cameraCategoryModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 class="modal-title">O que você quer fotografar?</h2>
+                <button class="modal-close" onclick="closeCameraCategoryModal()">&times;</button>
+            </div>
+            <div style="display: flex; flex-direction: column; gap: var(--spacing-md);">
+                <button type="button" class="btn btn-primary" onclick="chooseCameraType('odometer')" style="padding: var(--spacing-md); font-size: 1.1rem;">
+                    📊 Odômetro do Carro
+                </button>
+                <button type="button" class="btn btn-primary" onclick="chooseCameraType('receipt')" style="padding: var(--spacing-md); font-size: 1.1rem;">
+                    🧾 Nota Fiscal/Recibo
+                </button>
+                <button type="button" class="btn btn-secondary" onclick="closeCameraCategoryModal()" style="padding: var(--spacing-md);">
+                    ❌ Cancelar
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Camera Modal -->
+    <div id="cameraModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 class="modal-title" id="cameraTitle">Fotografar</h2>
+                <button class="modal-close" onclick="closeCameraModal()">&times;</button>
+            </div>
+            <div style="text-align: center;">
+                <video id="cameraPreview" style="width: 100%; max-height: 400px; background: black; border-radius: var(--border-radius); margin-bottom: var(--spacing-md); display: none;"></video>
+                <canvas id="cameraCanvas" style="display: none;"></canvas>
+                <img id="capturedImage" style="width: 100%; max-height: 400px; border-radius: var(--border-radius); margin-bottom: var(--spacing-md); display: none;">
+                <div id="cameraControls">
+                    <button type="button" id="startCameraBtn" class="btn btn-primary" style="margin-bottom: var(--spacing-sm);">📷 Abrir Câmera</button>
+                </div>
+                <div id="captureControls" style="display: none; gap: var(--spacing-sm); display: flex; flex-direction: column;">
+                    <button type="button" id="capturePhotoBtn" class="btn btn-primary">📸 Tirar Foto</button>
+                    <button type="button" id="retakeCameraBtn" class="btn btn-secondary">🔄 Tirar Novamente</button>
+                </div>
+                <div id="photoControls" style="display: none; gap: var(--spacing-sm); display: flex; flex-direction: column;">
+                    <button type="button" id="useCameraPhotoBtn" class="btn btn-primary">✅ Usar Esta Foto</button>
+                    <button type="button" id="closeCameraBtn" class="btn btn-secondary" onclick="closeCameraModal()">Fechar</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="app.js"></script>
+</body>
+</html>
