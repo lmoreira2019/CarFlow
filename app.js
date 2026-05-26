@@ -1216,6 +1216,9 @@ window.addEventListener('click', function(event) {
 // ============================================================================
 
 document.addEventListener('DOMContentLoaded', function() {
+    console.log('✅ DOMContentLoaded disparado!');
+    console.log('📱 Página carregada - Inicializando CarFlow...');
+
     // Check localStorage availability
     const localStorageWorks = checkLocalStorage();
     console.log('📦 localStorage disponível?', localStorageWorks);
