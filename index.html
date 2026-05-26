@@ -31,6 +31,54 @@
 
         <!-- Main Content -->
         <main class="main-content">
+            <!-- Vehicle Info Section -->
+            <section class="section">
+                <div class="card">
+                    <h3 class="card-title">🚗 Informações do Veículo</h3>
+                    <form id="vehicleForm" class="form">
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label for="vehicleBrand" class="form-label">Marca</label>
+                                <input
+                                    type="text"
+                                    id="vehicleBrand"
+                                    class="form-input"
+                                    placeholder="ex: Toyota"
+                                >
+                            </div>
+
+                            <div class="form-group">
+                                <label for="vehicleModel" class="form-label">Modelo</label>
+                                <input
+                                    type="text"
+                                    id="vehicleModel"
+                                    class="form-input"
+                                    placeholder="ex: Etios"
+                                >
+                            </div>
+
+                            <div class="form-group">
+                                <label for="vehicleYear" class="form-label">Ano</label>
+                                <input
+                                    type="number"
+                                    id="vehicleYear"
+                                    class="form-input"
+                                    placeholder="ex: 2015"
+                                    min="1980"
+                                    max="2099"
+                                >
+                            </div>
+                        </div>
+                        <button type="submit" class="btn btn-primary">Salvar Informações do Veículo</button>
+                    </form>
+                    <div id="vehicleDisplay" style="margin-top: var(--spacing-md); padding: var(--spacing-md); background: rgba(88, 166, 255, 0.1); border-radius: var(--border-radius); display: none;">
+                        <p style="margin: 0; color: var(--text-secondary);">
+                            <strong>Veículo Registrado:</strong> <span id="vehicleInfo"></span>
+                        </p>
+                    </div>
+                </div>
+            </section>
+
             <!-- Fuel Tracking Section -->
             <section class="section">
                 <div class="section-header">

@@ -5,7 +5,8 @@
 
 const STORAGE_KEYS = {
     FUEL_LOGS: 'carflow_fuel_logs',
-    MAINTENANCE_RECORDS: 'carflow_maintenance_records'
+    MAINTENANCE_RECORDS: 'carflow_maintenance_records',
+    VEHICLE_INFO: 'carflow_vehicle_info'
 };
 
 const MAINTENANCE_ITEMS = {
@@ -28,6 +29,49 @@ const EFFICIENCY_LEVELS = {
     good: { min: 11.1, max: 13.0, label: 'BOM', color: 'success', icon: '🟢' },
     excellent: { min: 13.1, max: Infinity, label: 'EXCELENTE', color: 'excellent', icon: '⭐' }
 };
+
+// ============================================================================
+// Vehicle Information Management
+// ============================================================================
+
+function saveVehicleInfo(brand, model, year) {
+    const vehicleInfo = {
+        brand: brand || '',
+        model: model || '',
+        year: year || null,
+        savedAt: new Date().toISOString()
+    };
+
+    saveData(STORAGE_KEYS.VEHICLE_INFO, vehicleInfo);
+    return vehicleInfo;
+}
+
+function getVehicleInfo() {
+    return getStoredData(STORAGE_KEYS.VEHICLE_INFO, {
+        brand: '',
+        model: '',
+        year: null
+    });
+}
+
+function displayVehicleInfo() {
+    const vehicleInfo = getVehicleInfo();
+    const displayContainer = document.getElementById('vehicleDisplay');
+    const vehicleInfoSpan = document.getElementById('vehicleInfo');
+
+    if (vehicleInfo.brand || vehicleInfo.model || vehicleInfo.year) {
+        const infoText = `${vehicleInfo.brand || '?'} ${vehicleInfo.model || '?'} ${vehicleInfo.year || '?'}`;
+        vehicleInfoSpan.textContent = infoText;
+        displayContainer.style.display = 'block';
+
+        // Update form fields
+        document.getElementById('vehicleBrand').value = vehicleInfo.brand || '';
+        document.getElementById('vehicleModel').value = vehicleInfo.model || '';
+        document.getElementById('vehicleYear').value = vehicleInfo.year || '';
+    } else {
+        displayContainer.style.display = 'none';
+    }
+}
 
 // ============================================================================
 // Data Management
@@ -1082,6 +1126,20 @@ document.addEventListener('DOMContentLoaded', function() {
     // Initial UI load
     updateUI();
     setupSmartInputs();
+    displayVehicleInfo();
+
+    // Vehicle form submission
+    document.getElementById('vehicleForm').addEventListener('submit', function(e) {
+        e.preventDefault();
+
+        const brand = document.getElementById('vehicleBrand').value.trim();
+        const model = document.getElementById('vehicleModel').value.trim();
+        const year = document.getElementById('vehicleYear').value;
+
+        saveVehicleInfo(brand, model, year);
+        displayVehicleInfo();
+        alert('✅ Informações do veículo salvas com sucesso!');
+    });
 
     // Load maintenance targets into form
     const targets = getMaintenanceTargets();
