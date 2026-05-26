@@ -647,9 +647,22 @@ function setupSmartInputs() {
     const smartInputs = [fuelLiters, pricePerLiter, totalSpent];
 
     smartInputs.forEach(input => {
-        // Convert comma to dot on input
+        // Convert comma to dot on input - more aggressive replacement
         input.addEventListener('input', function() {
-            this.value = this.value.replace(',', '.');
+            // Replace all commas with dots
+            if (this.value.includes(',')) {
+                this.value = this.value.replace(/,/g, '.');
+            }
+        });
+
+        // Also handle paste events
+        input.addEventListener('paste', function(e) {
+            setTimeout(() => {
+                if (this.value.includes(',')) {
+                    this.value = this.value.replace(/,/g, '.');
+                    this.dispatchEvent(new Event('change'));
+                }
+            }, 0);
         });
 
         input.addEventListener('change', function() {
@@ -689,7 +702,9 @@ function setupSmartInputs() {
         const editInputs = editFuelModal.querySelectorAll('.smart-input');
         editInputs.forEach(input => {
             input.addEventListener('input', function() {
-                this.value = this.value.replace(',', '.');
+                if (this.value.includes(',')) {
+                    this.value = this.value.replace(/,/g, '.');
+                }
             });
         });
     }
@@ -1281,11 +1296,16 @@ document.addEventListener('DOMContentLoaded', function() {
         e.preventDefault();
 
         const odometer = document.getElementById('fuelOdometer').value;
-        const liters = document.getElementById('fuelLiters').value;
-        const pricePerLiter = document.getElementById('pricePerLiter').value;
-        const totalSpent = document.getElementById('totalSpent').value;
+        let liters = document.getElementById('fuelLiters').value;
+        let pricePerLiter = document.getElementById('pricePerLiter').value;
+        let totalSpent = document.getElementById('totalSpent').value;
         const dateTime = document.getElementById('fuelDateTime').value;
         const gasStation = document.getElementById('fuelGasStation').value;
+
+        // Ensure all commas are converted to dots
+        liters = liters ? String(liters).replace(/,/g, '.') : '';
+        pricePerLiter = pricePerLiter ? String(pricePerLiter).replace(/,/g, '.') : '';
+        totalSpent = totalSpent ? String(totalSpent).replace(/,/g, '.') : '';
 
         if (!odometer) {
             alert('Odômetro é obrigatório!');
