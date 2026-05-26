@@ -837,84 +837,58 @@ function generateFuelPDF() {
         return;
     }
 
-    // Use existing hidden element or create one
-    let container = document.getElementById('fuelPdfContent');
-    if (!container) {
-        container = document.createElement('div');
-        container.id = 'fuelPdfContent';
-        container.style.cssText = 'display: none;';
-        document.body.appendChild(container);
-    }
+    const { jsPDF } = window.jspdf;
+    const doc = new jsPDF({ orientation: 'landscape', unit: 'mm', format: 'a4' });
 
-    let html = `
-        <div style="padding: 20px; background: white; color: black; font-family: Arial, sans-serif; width: 100%;">
-            <h1 style="margin-top: 0; text-align: center;">🚗 CarFlow - Histórico de Abastecimentos</h1>
-            <p style="text-align: center; color: #666;">Gerado em: ${new Date().toLocaleDateString('pt-BR')}</p>
-            <hr style="border: 1px solid #000;"/>
-            <table style="width: 100%; border-collapse: collapse; margin-top: 20px; border: 1px solid #000;">
-                <thead>
-                    <tr style="background-color: #f0f0f0;">
-                        <th style="padding: 10px; border: 1px solid #000; text-align: left;">Data</th>
-                        <th style="padding: 10px; border: 1px solid #000; text-align: left;">Odômetro</th>
-                        <th style="padding: 10px; border: 1px solid #000; text-align: left;">Litros</th>
-                        <th style="padding: 10px; border: 1px solid #000; text-align: left;">Preço/L</th>
-                        <th style="padding: 10px; border: 1px solid #000; text-align: left;">Total</th>
-                        <th style="padding: 10px; border: 1px solid #000; text-align: left;">Posto</th>
-                        <th style="padding: 10px; border: 1px solid #000; text-align: left;">Eficiência</th>
-                    </tr>
-                </thead>
-                <tbody>
-    `;
+    let yPosition = 20;
 
-    logs.forEach(log => {
-        const date = new Date(log.timestamp);
-        const dateStr = date.toLocaleDateString('pt-BR');
-        const efficiency = log.efficiency ? log.efficiency : '—';
-        const gasStation = log.gasStation || '—';
+    // Title
+    doc.setFont('helvetica', 'bold');
+    doc.setFontSize(16);
+    doc.text('🚗 CarFlow - Histórico de Abastecimentos', 105, yPosition, { align: 'center' });
 
-        html += `
-                    <tr>
-                        <td style="padding: 10px; border: 1px solid #000;">${dateStr}</td>
-                        <td style="padding: 10px; border: 1px solid #000;">${log.odometer} KM</td>
-                        <td style="padding: 10px; border: 1px solid #000;">${formatDecimal(log.liters, 2)} L</td>
-                        <td style="padding: 10px; border: 1px solid #000;">R$ ${formatDecimal(log.pricePerLiter, 2)}</td>
-                        <td style="padding: 10px; border: 1px solid #000;">R$ ${formatDecimal(log.totalSpent, 2)}</td>
-                        <td style="padding: 10px; border: 1px solid #000;">${gasStation}</td>
-                        <td style="padding: 10px; border: 1px solid #000;">${efficiency}</td>
-                    </tr>
-        `;
+    // Date
+    yPosition += 10;
+    doc.setFontSize(10);
+    doc.setFont('helvetica', 'normal');
+    doc.text(`Gerado em: ${new Date().toLocaleDateString('pt-BR')}`, 105, yPosition, { align: 'center' });
+
+    // Table
+    yPosition += 15;
+    const headers = ['Data', 'Odômetro', 'Litros', 'Preço/L', 'Total', 'Posto', 'Eficiência'];
+    const data = logs.map(log => [
+        new Date(log.timestamp).toLocaleDateString('pt-BR'),
+        `${log.odometer} KM`,
+        `${formatDecimal(log.liters, 2)} L`,
+        `R$ ${formatDecimal(log.pricePerLiter, 2)}`,
+        `R$ ${formatDecimal(log.totalSpent, 2)}`,
+        log.gasStation || '—',
+        log.efficiency ? `${log.efficiency} km/L` : '—'
+    ]);
+
+    doc.autoTable({
+        startY: yPosition,
+        head: [headers],
+        body: data,
+        theme: 'grid',
+        headStyles: { fillColor: [200, 200, 200], textColor: [0, 0, 0], fontStyle: 'bold' },
+        bodyStyles: { textColor: [0, 0, 0] },
+        margin: { top: 20 }
     });
 
+    // Summary
+    yPosition = doc.lastAutoTable.finalY + 15;
+    doc.setFont('helvetica', 'bold');
+    doc.text('Resumo:', 15, yPosition);
+
+    yPosition += 7;
+    doc.setFont('helvetica', 'normal');
     const avgEfficiency = calculateAverageEfficiency();
-    html += `
-                </tbody>
-            </table>
-            <hr style="border: 1px solid #000;"/>
-            <div style="margin-top: 20px; font-size: 13px; color: #333;">
-                <p><strong>Resumo:</strong></p>
-                <p>Total de abastecimentos: <strong>${logs.length}</strong></p>
-                <p>Eficiência média: <strong>${avgEfficiency ? formatDecimal(avgEfficiency, 2) + ' km/L' : '—'}</strong></p>
-            </div>
-        </div>
-    `;
+    doc.text(`Total de abastecimentos: ${logs.length}`, 15, yPosition);
+    yPosition += 7;
+    doc.text(`Eficiência média: ${avgEfficiency ? formatDecimal(avgEfficiency, 2) + ' km/L' : '—'}`, 15, yPosition);
 
-    container.innerHTML = html;
-    container.style.display = 'block';
-
-    // Wait a moment and generate PDF
-    setTimeout(() => {
-        const opt = {
-            margin: 10,
-            filename: `carflow-abastecimentos-${new Date().toISOString().split('T')[0]}.pdf`,
-            image: { type: 'jpeg', quality: 0.98 },
-            html2canvas: { scale: 2, useCORS: true, allowTaint: true, backgroundColor: '#ffffff' },
-            jsPDF: { orientation: 'landscape', unit: 'mm', format: 'a4' }
-        };
-
-        html2pdf().set(opt).from(container).save().finally(() => {
-            container.style.display = 'none';
-        });
-    }, 200);
+    doc.save(`carflow-abastecimentos-${new Date().toISOString().split('T')[0]}.pdf`);
 }
 
 function generateMaintenancePDF() {
@@ -925,33 +899,26 @@ function generateMaintenancePDF() {
         return;
     }
 
-    // Use existing hidden element or create one
-    let container = document.getElementById('maintenancePdfContent');
-    if (!container) {
-        container = document.createElement('div');
-        container.id = 'maintenancePdfContent';
-        container.style.cssText = 'display: none;';
-        document.body.appendChild(container);
-    }
+    const { jsPDF } = window.jspdf;
+    const doc = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4' });
 
-    let html = `
-        <div style="padding: 20px; background: white; color: black; font-family: Arial, sans-serif; width: 100%;">
-            <h1 style="margin-top: 0; text-align: center;">🚗 CarFlow - Histórico de Manutenção</h1>
-            <p style="text-align: center; color: #666;">Gerado em: ${new Date().toLocaleDateString('pt-BR')}</p>
-            <hr style="border: 1px solid #000;"/>
-            <table style="width: 100%; border-collapse: collapse; margin-top: 20px; border: 1px solid #000;">
-                <thead>
-                    <tr style="background-color: #f0f0f0;">
-                        <th style="padding: 10px; border: 1px solid #000; text-align: left;">Item</th>
-                        <th style="padding: 10px; border: 1px solid #000; text-align: left;">Data Troca</th>
-                        <th style="padding: 10px; border: 1px solid #000; text-align: left;">Odômetro</th>
-                        <th style="padding: 10px; border: 1px solid #000; text-align: left;">Próxima Troca</th>
-                    </tr>
-                </thead>
-                <tbody>
-    `;
+    let yPosition = 20;
 
-    records.forEach(record => {
+    // Title
+    doc.setFont('helvetica', 'bold');
+    doc.setFontSize(16);
+    doc.text('🚗 CarFlow - Histórico de Manutenção', 105, yPosition, { align: 'center' });
+
+    // Date
+    yPosition += 10;
+    doc.setFontSize(10);
+    doc.setFont('helvetica', 'normal');
+    doc.text(`Gerado em: ${new Date().toLocaleDateString('pt-BR')}`, 105, yPosition, { align: 'center' });
+
+    // Table
+    yPosition += 15;
+    const headers = ['Item', 'Data Troca', 'Odômetro', 'Próxima Troca'];
+    const data = records.map(record => {
         const nextMaint = getNextMaintenanceForItem(record.itemId);
         let nextInfo = '—';
 
@@ -967,42 +934,25 @@ function generateMaintenancePDF() {
             nextInfo = parts.length > 0 ? parts.join(' / ') : '—';
         }
 
-        const date = new Date(record.date);
-        const dateStr = date.toLocaleDateString('pt-BR');
-
-        html += `
-                    <tr>
-                        <td style="padding: 10px; border: 1px solid #000;">${record.itemName}</td>
-                        <td style="padding: 10px; border: 1px solid #000;">${dateStr}</td>
-                        <td style="padding: 10px; border: 1px solid #000;">${record.odometer.toLocaleString('pt-BR')} KM</td>
-                        <td style="padding: 10px; border: 1px solid #000;">${nextInfo}</td>
-                    </tr>
-        `;
+        return [
+            record.itemName,
+            new Date(record.date).toLocaleDateString('pt-BR'),
+            `${record.odometer.toLocaleString('pt-BR')} KM`,
+            nextInfo
+        ];
     });
 
-    html += `
-                </tbody>
-            </table>
-        </div>
-    `;
+    doc.autoTable({
+        startY: yPosition,
+        head: [headers],
+        body: data,
+        theme: 'grid',
+        headStyles: { fillColor: [200, 200, 200], textColor: [0, 0, 0], fontStyle: 'bold' },
+        bodyStyles: { textColor: [0, 0, 0] },
+        margin: { top: 20 }
+    });
 
-    container.innerHTML = html;
-    container.style.display = 'block';
-
-    // Wait a moment and generate PDF
-    setTimeout(() => {
-        const opt = {
-            margin: 10,
-            filename: `carflow-manutencao-${new Date().toISOString().split('T')[0]}.pdf`,
-            image: { type: 'jpeg', quality: 0.98 },
-            html2canvas: { scale: 2, useCORS: true, allowTaint: true, backgroundColor: '#ffffff' },
-            jsPDF: { orientation: 'portrait', unit: 'mm', format: 'a4' }
-        };
-
-        html2pdf().set(opt).from(container).save().finally(() => {
-            container.style.display = 'none';
-        });
-    }, 200);
+    doc.save(`carflow-manutencao-${new Date().toISOString().split('T')[0]}.pdf`);
 }
 
 // ============================================================================
